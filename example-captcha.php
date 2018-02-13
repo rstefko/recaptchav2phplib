@@ -24,7 +24,7 @@ if ($_POST["g-recaptcha-response"]) {
             echo "Everything's OK!";
     } else {
             # set the error code so that we can display it
-			# use $resp->error for error message
+            # use $resp->error for error message
             $error = $resp->error_code;
     }
 }
