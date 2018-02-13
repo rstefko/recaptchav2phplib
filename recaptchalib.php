@@ -9,6 +9,7 @@
  * Copyright (c) 2007 reCAPTCHA -- https://www.google.com/recaptcha/intro/index.html
  * AUTHOR:
  *   Claudio Sperti
+ *   Roman Stefko
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,11 +74,6 @@ function recaptcha_get_html ($pubkey)
 	if ($pubkey == null || $pubkey == '') {
 		die ("To use reCAPTCHA you must get an API key from <a href='https://www.google.com/recaptcha/admin'>https://www.google.com/recaptcha/admin</a>");
 	}
-	
-  $errorpart = "";
-  if ($error) {
-     $errorpart = "&amp;error=" . $error;
-  }
   
   return '<script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <div class="g-recaptcha" data-sitekey="' . $pubkey . '"></div>';
@@ -87,8 +83,41 @@ function recaptcha_get_html ($pubkey)
  * A ReCaptchaResponse is returned from recaptcha_check_answer()
  */
 class ReCaptchaResponse {
-        var $is_valid;
-        var $error;
+	var $is_valid;
+	var $error_code;
+	var $error;
+	
+	function set_error($error_code)
+	{
+		$this->error_code = $error_code;
+		
+		switch ($error_code)
+		{
+			case "missing-input-secret":
+				$this->error = "The secret parameter is missing.";
+				break;
+			
+			case "invalid-input-secret":
+				$this->error = "The secret parameter is invalid or malformed.";
+				break;
+			
+			case "missing-input-response":
+				$this->error = "The response parameter is missing.";
+				break;
+			
+			case "invalid-input-response":
+				$this->error = "The response parameter is invalid or malformed.";
+				break;
+			
+			case "bad-request":
+				$this->error = "The request is invalid or malformed.";
+				break;
+			
+			default:
+				$this->error = $error_code;
+				break;
+		}
+	}
 }
 
 
@@ -106,11 +135,11 @@ function recaptcha_check_answer ($privkey, $remoteip, $response, $extra_params =
 		die ("To use reCAPTCHA you must get an API key from <a href='https://www.google.com/recaptcha/admin'>https://www.google.com/recaptcha/admin</a>");
 	}
 	
-  //discard spam submissions
+  // Discard spam submissions
+	$recaptcha_response = new ReCaptchaResponse();
   if ($response == null || strlen($response) == 0) {
-    $recaptcha_response = new ReCaptchaResponse();
     $recaptcha_response->is_valid = false;
-    $recaptcha_response->error = 'incorrect-captcha-sol';
+    $recaptcha_response->set_error('missing-input-response');
     return $recaptcha_response;
   }
 
@@ -122,8 +151,12 @@ function recaptcha_check_answer ($privkey, $remoteip, $response, $extra_params =
            'response' => $response
            ) + $extra_params
   );
-
-  return $response;
+	
+	$recaptcha_response->is_valid = $response->success;
+	if (property_exists($response, "error-codes"))
+		$recaptcha_response->set_error($response->{'error-codes'}[0]);
+	
+  return $recaptcha_response;
 
 }
 

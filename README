@@ -1,7 +1,8 @@
 reCAPTCHA v2 php plugin README
 ================
 
-The reCAPTCHA v2 PHP Library helps you use the reCAPTCHA API. 
+The reCAPTCHA v2 PHP Library helps you use the reCAPTCHA API. The library uses similar interface
+to reCAPTCHA v1, so it is easier to switch to v2.
 
 Documentation about reCAPTCHA v2 -> https://developers.google.com/recaptcha/intro
 
@@ -25,9 +26,9 @@ You have to:
 https://www.google.com/recaptcha/admin
 
 
-- Include the recaptchalibv2.php:
+- Include the recaptchalib.php:
 
-require_once('recaptchalibv2.php');
+require_once('recaptchalib.php');
 
 
 - add client side integration:
@@ -42,10 +43,11 @@ if ($_POST["g-recaptcha-response"]) {
                                     $_SERVER["REMOTE_ADDR"],
                                     $_POST["g-recaptcha-response"]);
 
-    if ($resp->success) {
+    if ($resp->is_valid) {
             echo "Everything's OK!";
     } else {
             # set the error code so that we can display it
-            $error = $resp['error-codes'];
+			# use $resp->error for error message
+            $error = $resp->error_code;
     }
 }

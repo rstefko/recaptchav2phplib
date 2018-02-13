@@ -3,7 +3,7 @@
     <form action="" method="post">
 <?php
 
-require_once('recaptchalibv2.php');
+require_once('recaptchalib.php');
 
 // Get a key from https://www.google.com/recaptcha/admin
 $publickey = "";
@@ -20,11 +20,12 @@ if ($_POST["g-recaptcha-response"]) {
                                     $_SERVER["REMOTE_ADDR"],
                                     $_POST["g-recaptcha-response"]);
 
-    if ($resp->success) {
+    if ($resp->is_valid) {
             echo "Everything's OK!";
     } else {
             # set the error code so that we can display it
-            $error = $resp['error-codes'];
+			# use $resp->error for error message
+            $error = $resp->error_code;
     }
 }
 echo recaptcha_get_html($publickey);
